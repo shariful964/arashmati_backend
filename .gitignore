@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+
+# Logs
+
+
+# Build folders
+dist/
+build/
+
+# OS files
+
+
+# IDE
