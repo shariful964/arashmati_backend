@@ -35,6 +35,7 @@ export const sendEmail = async ({ to, subject, text }) => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
       },
+      family: 4,
     });
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
