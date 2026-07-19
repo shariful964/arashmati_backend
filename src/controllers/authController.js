@@ -6,46 +6,121 @@ import { sendEmail } from "../utils/sendEmail.js";
 import ActivityLog from "../models/activityLogModel.js";
 
 // register user
+// export const registerUser = async (req, res) => {
+//   try {
+//     const { name, email, password, confirmPassword } = req.body;
+//     //validation
+//     if (!name || !email || !password || !confirmPassword) {
+//       return res.status(400).json({
+//         msg: "Please provide all the fields",
+//       });
+//     }
+//     if (password !== confirmPassword) {
+//       return res.status(400).json({
+//         msg: "Password and confirm password do not match",
+//       });
+//     }
+//     // password validation
+//     if (password.length < 6) {
+//       return res.status(400).json({
+//         msg: "Password must be at least 6 characters long",
+//       });
+//     }
+//     // check exist user
+//     const existsUser = await User.findOne({ email });
+//     if (existsUser) {
+//       if (existsUser.isVerified) {
+//         return res.status(400).json({
+//           msg: "User already exists.",
+//         });
+//       }
+
+//       // unverifed user resend OTP
+//       const otp = generateOtp();
+//       const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+//       existsUser.otp = otp;
+//       existsUser.otpExpiry = otpExpiry;
+//       await existsUser.save();
+//       await sendEmail({
+//         to: email,
+//         subject: "Verify Email",
+//         text: `Your OTP is ${otp}. It will expire in 10 minutes`,
+//       });
+
+//       return res.status(200).json({
+//         msg: "OTP sent to your email. Please verify your email to login",
+//       });
+//     }
+
+//     const otp = generateOtp();
+//     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+//     // create new user
+//     const newUser = await User.create({
+//       name,
+//       email,
+//       password,
+//       otp,
+//       otpExpiry,
+//     });
+//     // send otp
+//     try {
+//       await sendEmail({
+//         to: email,
+//         subject: "Verify Email",
+//         text: `Your OTP is ${otp}. It will expire in 10 minutes`,
+//       });
+//       return res.status(201).json({
+//         msg: "User created successfully and OTP sent to your email",
+//       });
+//     } catch (error) {
+//       if (newUser && newUser._id) {
+//         await User.findByIdAndDelete(newUser._id);
+//       }
+//       return res.status(500).json({
+//         msg: "Failed to send OTP email.",
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error.message);
+//     return res.status(500).json({
+//       msg: error.message || "Server error",
+//     });
+//   }
+// };
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
-    //validation
+    
     if (!name || !email || !password || !confirmPassword) {
-      return res.status(400).json({
-        msg: "Please provide all the fields",
-      });
+      return res.status(400).json({ msg: "Please provide all the fields" });
     }
     if (password !== confirmPassword) {
-      return res.status(400).json({
-        msg: "Password and confirm password do not match",
-      });
+      return res.status(400).json({ msg: "Password and confirm password do not match" });
     }
-    // password validation
     if (password.length < 6) {
-      return res.status(400).json({
-        msg: "Password must be at least 6 characters long",
-      });
+      return res.status(400).json({ msg: "Password must be at least 6 characters long" });
     }
-    // check exist user
+
     const existsUser = await User.findOne({ email });
     if (existsUser) {
       if (existsUser.isVerified) {
-        return res.status(400).json({
-          msg: "User already exists.",
-        });
+        return res.status(400).json({ msg: "User already exists." });
       }
 
-      // unverifed user resend OTP
       const otp = generateOtp();
       const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
       existsUser.otp = otp;
       existsUser.otpExpiry = otpExpiry;
       await existsUser.save();
+      
+      console.log(`📧 Attempting to resend OTP to: ${email}`);
       await sendEmail({
         to: email,
         subject: "Verify Email",
         text: `Your OTP is ${otp}. It will expire in 10 minutes`,
       });
+      console.log(`✅ Resend OTP email successful for: ${email}`);
 
       return res.status(200).json({
         msg: "OTP sent to your email. Please verify your email to login",
@@ -55,7 +130,6 @@ export const registerUser = async (req, res) => {
     const otp = generateOtp();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // create new user
     const newUser = await User.create({
       name,
       email,
@@ -63,17 +137,24 @@ export const registerUser = async (req, res) => {
       otp,
       otpExpiry,
     });
-    // send otp
+
     try {
+      console.log(`📧 Attempting to send OTP to new user: ${email}`);
+      console.log(`🔑 Email User from env: ${process.env.EMAIL_USER}`);
+      
       await sendEmail({
         to: email,
         subject: "Verify Email",
         text: `Your OTP is ${otp}. It will expire in 10 minutes`,
       });
+      
+      console.log(`✅ OTP email sent successfully to: ${email}`);
+      
       return res.status(201).json({
         msg: "User created successfully and OTP sent to your email",
       });
-    } catch (error) {
+    } catch (emailError) {
+      console.error("❌ EMAIL SEND FAILED:", emailError.message); // এই লাইনটি যোগ করুন
       if (newUser && newUser._id) {
         await User.findByIdAndDelete(newUser._id);
       }
@@ -82,7 +163,7 @@ export const registerUser = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error.message);
+    console.error("❌ SERVER ERROR:", error.message);
     return res.status(500).json({
       msg: error.message || "Server error",
     });
