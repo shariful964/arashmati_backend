@@ -3,18 +3,18 @@ import nodemailer from "nodemailer";
 export const sendEmail = async ({ to, subject, text }) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
+      host: process.env.EMAIL_HOST || "smtp.gmail.com",
+      port: Number(process.env.EMAIL_PORT) || 587,
       secure: false,
       auth: {
-        user: "shariful0411@gmail.com",
-        pass: "daoy wqyn xghy xxwp",
+        user: process.env.EMAIL_USER || "shariful0411@gmail.com",
+        pass: process.env.EMAIL_PASSWORD || "daoy wqyn xghy xxwp",
       },
       connectionTimeout: 10000,
       greetingTimeout: 10000,
     });
     await transporter.sendMail({
-      from: "shariful0411@gmail.com",
+      from: process.env.EMAIL_USER || "shariful0411@gmail.com",
       to,
       subject,
       text,
